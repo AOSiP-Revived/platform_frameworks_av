@@ -40,6 +40,7 @@ namespace android {
 namespace {
 
 constexpr char COMPONENT_NAME[] = "c2.android.avc.encoder";
+constexpr uint32_t kMinOutBufferSize = 524288;
 
 void ParseGop(
         const C2StreamGopTuning::output &gop,
@@ -440,8 +441,7 @@ C2SoftAvcEnc::C2SoftAvcEnc(
       mSignalledError(false),
       mCodecCtx(nullptr),
       mOutBlock(nullptr),
-      // TODO: output buffer size
-      mOutBufferSize(524288) {
+      mOutBufferSize(kMinOutBufferSize) {
 
     // If dump is enabled, then open create an empty file
     GENERATE_FILE_NAMES();
@@ -951,6 +951,9 @@ c2_status_t C2SoftAvcEnc::initEncoder() {
 
     mStride = width;
 
+    // Assume worst case output buffer size to be equal to number of bytes in input
+    mOutBufferSize = std::max(width * height * 3 / 2, kMinOutBufferSize);
+        
     // TODO
     mIvVideoColorFormat = IV_YUV_420P;
 
